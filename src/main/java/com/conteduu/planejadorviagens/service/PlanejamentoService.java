@@ -4,6 +4,7 @@ import com.conteduu.planejadorviagens.model.Viagem;
 import com.conteduu.planejadorviagens.repository.ViagemRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class PlanejamentoService {
 
@@ -17,4 +18,13 @@ public class PlanejamentoService {
         if (repository.conflict(start, end)) throw new IllegalArgumentException("Conflita com outra viagem");
         repository.save(new Viagem(null, destination, cost, start, end));
     }
+
+    public List<Viagem> listAll() {
+        return repository.listAll();
+    }
+
+    public double totalExpense() {
+        return repository.sumCost();
+    }
+
 }
