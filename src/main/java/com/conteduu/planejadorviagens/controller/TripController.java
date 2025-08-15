@@ -2,6 +2,7 @@ package com.conteduu.planejadorviagens.controller;
 
 import com.conteduu.planejadorviagens.model.Viagem;
 import com.conteduu.planejadorviagens.service.PlanejamentoService;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -10,78 +11,134 @@ import javafx.scene.control.*;
 import java.time.format.DateTimeFormatter;
 
 public class TripController {
+
+    Viagem viagemHaAtualizar = new Viagem();
+
     // Elements FXML
     @FXML
-    private DatePicker startDatePicker;
+    private DatePicker inicioDatePicker;
     @FXML
-    private DatePicker endDatePicker;
+    private DatePicker fimDatePicker;
     @FXML
-    private TextField destinationField;
+    private TextField destinoField;
     @FXML
-    private TextField costField;
+    private TextField custoField;
     @FXML
-    private Button buttonAdd;
+    private Button adicionarViagemButton;
     @FXML
-    private TableView<Viagem> tripTable;
+    private Button editarViagemButton;
     @FXML
-    private TableColumn<Viagem, String> colCity;
+    private Button salvarMudancasButton;
     @FXML
-    private TableColumn<Viagem, String> colStart;
+    private TableView<Viagem> tabelaViagens;
     @FXML
-    private TableColumn<Viagem, String> colEnd;
+    private TableColumn<Viagem, String> colunaCidade;
     @FXML
-    private TableColumn<Viagem, String> colCost;
+    private TableColumn<Viagem, String> colunaDataInicio;
+    @FXML
+    private TableColumn<Viagem, String> colunaDataFim;
+    @FXML
+    private TableColumn<Viagem, Number> colunaCustoViagem;
 
     private final PlanejamentoService planejamentoService = new PlanejamentoService();
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML
-    private void initialized() {
+    private void initialize() {
+
         // Define como cada coluna extrai informação da entidade
 
         // Se só devolver uma String simples, o JFX não consegue saber se o valor mudou depois.
         // Por isso se devolver uma SimpleStringProperty ele pode observar aquela propriedade
         // e atualizar a interface automaticamente.
-        colCity.setCellValueFactory( colCity ->
+        colunaCidade.setCellValueFactory(colCity ->
                 new SimpleStringProperty(colCity.getValue().getDestino())
         );
 
-        colStart.setCellValueFactory( start ->
-                        new SimpleStringProperty(start.getValue().getDataInicio().format(formatter))
-        );
+        colunaDataInicio.setCellValueFactory(start -> {
+            System.out.println(start.getValue().getDataInicio());
+            return new SimpleStringProperty(start.getValue().getDataInicio().format(formatter));
+        });
 
-        colEnd.setCellValueFactory(end ->
+        colunaDataFim.setCellValueFactory(end ->
                 new SimpleStringProperty(end.getValue().getDataFim().format(formatter))
         );
 
-        colCost.setCellValueFactory(cost ->
-                new SimpleStringProperty(cost.getValue().getDataFim().format(formatter))
+        colunaCustoViagem.setCellValueFactory(cost ->
+                new SimpleDoubleProperty(cost.getValue().getCusto())
         );
 
         // Preencher a tabela com dados já gravados.
 
-        tripTable.setItems(FXCollections.observableArrayList(planejamentoService.listAll()));
+        tabelaViagens.setItems(FXCollections.observableArrayList(planejamentoService.listAll()));
 
+        editarViagemButton.setDisable(true);
+        salvarMudancasButton.setVisible(false);
     }
 
     @FXML
-    public void addTrip() {
+    public void adicionarViagem() {
         try {
-            double cost = Double.parseDouble(
-                    costField.getText().replace(",", ".")
+            double custo = Double.parseDouble(custoField.getText().replace(",", "."));
+
+            planejamentoService.addTrip(
+                    destinoField.getText(),
+                    inicioDatePicker.getValue(),
+                    fimDatePicker.getValue(),
+                    custo
             );
+
+            tabelaViagens.getItems().setAll(planejamentoService.listAll());
+            atualizarCustoViagem();
+            limparCamposFormulario();
+
         } catch (Exception e) {
             mostrarErro(e.getMessage());
         }
+    }
+
+    @FXML
+    public void ativarBotaoEditarViagem(){
+        editarViagemButton.setDisable(false);
+    }
+
+    @FXML
+    public void editarViagem(){
+        viagemHaAtualizar = tabelaViagens.getSelectionModel().getSelectedItem();
+        carregarDadosFormulario(viagemHaAtualizar);
+        salvarMudancasButton.setVisible(true);
+    }
+
+    @FXML
+    public void salvarMudancaViagem(){
+        planejamentoService.salvarAlteracoes(viagemHaAtualizar);
+        tabelaViagens.setItems(FXCollections.observableArrayList(planejamentoService.listAll()));
+        atualizarCustoViagem();
+        limparCamposFormulario();
+        editarViagemButton.setDisable(true);
+        salvarMudancasButton.setVisible(false);
     }
 
     private void mostrarErro(String errorMessage) {
         new Alert(Alert.AlertType.ERROR, errorMessage).showAndWait();
     }
 
-    private void updateCost() {
-        costField.setText("Total: R$ " + String.format("%.2f", planejamentoService.totalExpense()));
+    private void atualizarCustoViagem() {
+        custoField.setText("Total: R$ " + String.format("%.2f", planejamentoService.totalExpense()));
     }
 
+    private void limparCamposFormulario(){
+        destinoField.clear();
+        inicioDatePicker.setValue(null);
+        fimDatePicker.setValue(null);
+        custoField.clear();
+    }
+
+    private void carregarDadosFormulario(Viagem trip){
+        destinoField.setText(trip.getDestino());
+        custoField.setText(String.valueOf(trip.getCusto()));
+        inicioDatePicker.setValue(trip.getDataInicio());
+        fimDatePicker.setValue(trip.getDataFim());
+    }
 }

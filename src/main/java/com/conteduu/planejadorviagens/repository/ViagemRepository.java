@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Sorts.ascending;
 
 public class ViagemRepository {
@@ -33,8 +34,16 @@ public class ViagemRepository {
     public boolean conflict(LocalDate start, LocalDate end){
         long quantityConflicts = collection.countDocuments(Filters.and(
                 Filters.lte("dataInicio", end),
-                Filters.gte("dataFim", start)
+                Filters.gte("dataFim", start),
         ));
         return quantityConflicts > 0;
+    }
+
+    public boolean verificaConflitoAoAtualizar(LocalDate start, LocalDate end){
+        return false;
+    }
+
+    public void updateTrip(Viagem viagem){
+        collection.replaceOne(eq("_id", String.valueOf(viagem.getId())), viagem);
     }
 }
