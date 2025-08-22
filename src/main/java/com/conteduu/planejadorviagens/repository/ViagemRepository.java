@@ -4,6 +4,7 @@ import com.conteduu.planejadorviagens.config.MongoConfig;
 import com.conteduu.planejadorviagens.model.Viagem;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,6 +18,10 @@ public class ViagemRepository {
 
     public void save(Viagem viagem){
         collection.insertOne(viagem);
+    }
+
+    public void atualizar(Viagem viagem){
+        collection.replaceOne(Filters.eq("_id", viagem.getId()), viagem);
     }
 
     public List<Viagem> listAll(){
@@ -36,5 +41,14 @@ public class ViagemRepository {
                 Filters.gte("dataFim", start)
         ));
         return quantityConflicts > 0;
+    }
+
+    public boolean conflitaExcluindoId(ObjectId ignorarId, LocalDate inicio, LocalDate fim){
+        long qtd = collection.countDocuments(Filters.and(
+                Filters.lte("dataInicio", fim),
+                Filters.gte("dataFim", inicio),
+                Filters.ne("_id", ignorarId)
+        ));
+        return qtd > 0;
     }
 }

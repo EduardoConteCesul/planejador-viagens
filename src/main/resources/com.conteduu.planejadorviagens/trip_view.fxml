@@ -28,7 +28,12 @@
                      <children>
                         <TextField fx:id="destinationField" promptText="Digite o seu destino" />
                         <TextField fx:id="costField" promptText="Digite o orçamento" />
-                        <Button fx:id="buttonAdd" mnemonicParsing="false" onAction="#addTrip" prefHeight="25.0" prefWidth="200.0" text="Adicionar Viagem" />
+                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+                           <children>
+                              <Button fx:id="buttonAdd" mnemonicParsing="false" onAction="#addTrip" prefHeight="25.0" prefWidth="200.0" text="Adicionar Viagem" />
+                              <Button fx:id="btnEditarViagem" mnemonicParsing="false" onAction="#editarViagem" text="Editar" />
+                           </children>
+                        </HBox>
                      </children>
                   </VBox>
                </children>
